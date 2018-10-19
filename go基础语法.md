@@ -239,6 +239,74 @@ fmt.Println(a,b)
 
   sting底层是一个byte的数组，因此可以进行切片处理
 
+**map**
+
+- map使用make分配空间
+- map，key不能重复，如果重复，以最后一个为准（相当于修改）
+- map，key-value无序
+- map删除，使用delete(map，key)，无删除所有key的方法，可以遍历删除，或者make一个新的
+- 使用for-range遍历map
+- 自动扩容
+
+**结构体**
+
+- 定义
+
+  ~~~go
+  type Cat struct {
+  	Name string
+  }
+  var cat1 Cat
+  ~~~
+
+- 初始化
+
+  1. var cat1 Cat
+
+  2. var cat2 = Cat{Name:"Mao"}
+
+  3.  var cat2 *Cat = new(Cat)  //结构体指针
+
+      (*cat2).Name = "mama"
+
+      fmt.Println(*cat2)
+
+  4. var cat4 *Cat = &Cat{Name:"mao"}
+
+     fmt.Println(*cat4)
+
+- 在内存中是连续的
+
+- 对struct重命名相当于是一个新的数据类型
+
+- 对结构体绑定方法
+
+  ~~~go
+  func (cat1 Cat) see() string{
+      cat1.Name = "猫1"
+      return "hello" + cat1.Name
+  }
+  
+  var cat Cat
+  cat.Name = "猫"
+  fmt.Println(cat.see())  //hello猫1，等价于=>(&cat).see()，这种形式上是地址传递，但是本质是值传递
+  fmt.Println(cat.Name) //猫
+  ~~~
+
+- 结构体是值传递，如果想要修改参数，则传入指针对象
+
+  ~~~go
+  func (cat1 *Cat) see() string{
+      cat1.Name = "猫1"
+      return "hello" + cat1.Name
+  }
+  
+  var cat Cat
+  cat.Name = "猫"
+  fmt.Println(cat.see())  //hello猫1，这样写的形式上是值传递，但是本质是地址传递。 等价于=>(&cat).see()
+  fmt.Println(cat.Name) //猫1
+  ~~~
+
 ## 运算符
 
 - **无 --i，++i**
@@ -339,22 +407,27 @@ fmt.Println(a,b)
 - 八进制以0开头
 - 十六进制以0x或0X开头开头
 
-## 控制语句
+## 语句
+
+### if
+
+- 语句定义的变量的作用域仅在 `if` 范围之内。else里面同样可以使用。
+- 可以不加`()`
+
+### switch
 
 - switch，不需要加break，匹配到谁执行谁，不会往下继续执行，和java不一样
-
 - switch/case，后面都是一个表达式，常量值、变量、又返回的函数都可以。
-
+- 没有条件的 switch 同 `switch true` 一样。
 - 可以不加default。
-
 - switch穿透：case后添加一个fallthrough，默认只穿透一层。
 
-## 循环
+### for循环
 
 - for循环不加（）
 - **Go中无do while、while循环，只有for循环**
 
-## goto
+### goto
 
 ~~~go
 goto lable1
@@ -409,13 +482,74 @@ func sun(a int,b int) int{
 1. 值传递：int，float，bool，string，数组，结构体
 2. 引用传递：指针，slice切片，map，管道chan，interface等
 
-## 指针
+## 面向对象特性
 
-## 特点
+### 继承
 
-- 高并发
+​	使用结构体，嵌套**匿名**结构体的方式实现，可以访问内嵌的结构体的所有方法、字段（**不管大小写都可以使用**）。访问时，可以使用外部结构体直接访问。
 
-- 多个返回值
+​	如果使用**有名**的内嵌结构体，访问时，必须带上内嵌结构体的名称。
+
+**多重继承**
+
+​	使用多个内嵌结构体
+
+### 多态
+
+​	主要通过接口体现
+
+**接口**
+
+~~~go
+type Cat interface {
+    See()
+    Say()
+}
+~~~
+
+一个变量，含有接口类型中的所有方法，就表示实现了接口，可以实现多个接口
+
+~~~go
+type Cat interface {
+    See()
+}
+type Interface interface{
+    Say()
+}
+
+type Dog struct {
+
+}
+
+func (dog Dog) See(){
+    fmt.Println("See()")
+}
+
+func (dog Dog) Say(){
+    fmt.Println("Say()")
+}
+
+func main() {
+    var dog Dog
+    var cat Cat = dog
+    var aInterface = dog
+    cat.See()
+    aInterface.Say()
+}
+~~~
+
+- 接口中不能有变量
+- 一个接口可以继承其他多个接口，但是要实现这个接口，必须实现所有接口
+- 空接口，没有任何方法，所以可以把任何变量赋值给空接口
+
+## 并发
+
+### goroutine
+
+### channel
+
+- 使用make创建，不能超过其容量
+- 不能使用for-i遍历channel，使用for-range。遍历时，先关闭管道，close(channel)
 
 ## 注意&规范
 
@@ -443,6 +577,10 @@ func sun(a int,b int) int{
 
 - Go不支持重载，和js一样
 
+- 高并发
+
+- 多个返回值
+
 # javascript、java异同点
 
 1. 和javascript相同点
@@ -465,6 +603,7 @@ func sun(a int,b int) int{
    不同点
 
    - 无try..catch..finally，使用defer，panic，recover，抛出panic异常，defer中使用recover捕获处理
+   - go有面向对象编程的特性，无class，但是有struct，去掉了继承、方法重载、构造函数和析构函数、隐藏this指针
 
 # 字符串常用api
 
@@ -507,7 +646,3 @@ func sun(a int,b int) int{
 18. 判断字符串是否以指定字符串开头，strings.HasPrefix("http//aaa.com", "http//")
 
 19. 判断字符串是否已指定字符串结束，strings.HasSuffix("a.jpg", "jpg")
-
-
-
-231页
